@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ভোটার তথ্য অনুসন্ধান</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; text-align: center; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { color: #333; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        .result-card { background: #fafafa; border-left: 5px solid #007bff; padding: 15px; margin-top: 15px; text-align: left; border-radius: 5px; display: none; }
+        .result-card p { margin: 5px 0; font-size: 15px; color: #444; }
+        .result-card strong { color: #000; }
+        #no-result { color: red; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🔍 ভোটার তালিকা সার্চ সিস্টেম</h2>
+    <p>নাম, ভোটার নম্বর, পিতা বা মাতার নাম লিখে খুঁজুন</p>
+    
+    <input type="text" id="search-box" placeholder="এখানে টাইপ করুন..." oninput="searchData()">
+    
+    <div id="result-container"></div>
+    <div id="no-result">দুঃখিত, কোনো তথ্য পাওয়া যায়নি!</div>
+</div>
+
+<script>
+    let voterData = [];
+
+    // JSON ফাইল থেকে ডাটা লোড করা
+    fetch('data.json')
+        .then(response => response.json())
+        .then(data => { voterData = data; })
+        .catch(err => console.error("ডাটা লোড করতে সমস্যা হয়েছে:", err));
+
+    function searchData() {
+        const query = document.getElementById('search-box').value.trim();
+        const container = document.getElementById('result-container');
+        const noResult = document.getElementById('no-result');
+        
+        container.innerHTML = ''; // আগের ফলাফল মুছে ফেলা
+        
+        if (query === '') {
+            noResult.style.display = 'none';
+            return;
+        }
+
+        // সার্চ কুয়েরির সাথে মিলানো (নাম, ভোটার আইডি, পিতা, মাতা সব কলামে খুঁজবে)
+        const filtered = voterData.filter(item => 
+            item.name.includes(query) || 
+            item.voter_id.includes(query) || 
+            item.father.includes(query) || 
+            item.mother.includes(query)
+        );
+
+        if (filtered.length > 0) {
+            noResult.style.display = 'none';
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                card.style.display = 'block';
+                card.innerHTML = `
+                    <p><strong>নাম:</strong> ${item.name}</p>
+                    <p><strong>ভোটার নম্বর:</strong> ${item.voter_id}</p>
+                    <p><strong>পিতা:</strong> ${item.father}</p>
+                    <p><strong>মাতা:</strong> ${item.mother}</p>
+                    <p><strong>জন্ম তারিখ:</strong> ${item.dob}</p>
+                    <p><strong>ঠিকানা:</strong> ${item.address}</p>
+                `;
+                container.appendChild(card);
+            });
+        } else {
+            noResult.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
